@@ -1,0 +1,22 @@
+# Ignore node_modules from being copied into image
+node_modules
+
+# Ignore logs
+*.log
+
+# Git repo files
+.git
+.gitignore
+
+# Docker & compose files (not needed inside image)
+Dockerfile
+docker-compose.yml
+dist
+
+# OS & editor related files
+.DS_Store
+.vscode
+.idea
+
+# Environment files (if you're using .env for secrets)
+.env

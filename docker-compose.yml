@@ -1,0 +1,61 @@
+services:
+  postgres:
+    image: postgres:latest
+    container_name: medusa-db
+    environment:
+      POSTGRES_USER: medusa
+      POSTGRES_PASSWORD: medusa
+      POSTGRES_DB: medusa
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U medusa -d medusa"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - medusa-network
+
+  redis:
+    image: redis:latest
+    container_name: medusa-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - medusa-network
+
+  medusa:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: medusa-backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      NODE_ENV: development
+      JWT_SECRET: your_jwt_secret
+      COOKIE_SECRET: your_cookie_secret
+      DATABASE_URL: postgres://medusa:medusa@postgres:5432/medusa
+      REDIS_URL: redis://redis:6379
+      STORE_CORS: http://localhost:8000,http://localhost:7001
+      ADMIN_CORS: http://localhost:7000,http://localhost:7001
+    ports:
+      - "9000:9000"
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    networks:
+      - medusa-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  medusa-network:
+    driver: bridge
